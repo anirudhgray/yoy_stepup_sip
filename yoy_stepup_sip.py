@@ -69,7 +69,10 @@ def plot_multiple_growths(
     
     for i, sip in enumerate(sip_amounts):
         for j, rate in enumerate(rates_of_return):
-            ax = axs[i, j] if num_rows > 1 else axs[j]
+            if num_cols > 1:
+                ax = axs[i, j] if num_rows > 1 else axs[j]
+            else:
+                ax = axs[i] if num_rows > 1 else axs
             plt.sca(ax)
             title = f'SIP: {sip}, Rate: {rate}%'
             for step_up in step_ups:
