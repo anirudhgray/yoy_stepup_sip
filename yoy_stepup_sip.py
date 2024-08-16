@@ -36,7 +36,7 @@ def plot_growth(years: int, yearly_growth: list[float], title: str, color: str =
 def plot_multiple_growths(
     initial_lump_sum: float = typer.Option(700000, help="Initial lump sum investment in INR"),
     sip_amounts: str = typer.Option("70000,120000,250000", help="Comma-separated list of SIP amounts in INR"),
-    step_ups: str = typer.Option("0,10,15", help="Comma-separated list of annual step-up percentages"),
+    step_ups: str = typer.Option("0,10", help="Comma-separated list of annual step-up percentages"),
     rates_of_return: str = typer.Option("10,14,18", help="Comma-separated list of annual rates of return in percentage"),
     years: int = typer.Option(25, help="Number of years for the investment"),
     colors: str = typer.Option(None, help="Comma-separated list of colors for the plots"),
@@ -60,9 +60,12 @@ def plot_multiple_growths(
     fig.tight_layout(pad=4.0)
     
     if not colors:
-        colors = itertools.cycle(['c', 'm', 'y'])
+        colors = ['c', 'm', 'y', 'k', 'r', 'g', 'b'][:len(step_ups)]
     if not markers:
-        markers = itertools.cycle(['o', 's', 'D'])
+        markers = ['o', 's', 'D', '^', 'v', 'p', 'P'][:len(step_ups)]
+    
+    color_cycle = itertools.cycle(colors)
+    marker_cycle = itertools.cycle(markers)
     
     for i, sip in enumerate(sip_amounts):
         for j, rate in enumerate(rates_of_return):
@@ -71,7 +74,7 @@ def plot_multiple_growths(
             title = f'SIP: {sip}, Rate: {rate}%'
             for step_up in step_ups:
                 yearly_growth = calculate_yearly_growth(initial_lump_sum, sip, step_up, rate, years)
-                plot_growth(years, yearly_growth, title, color=next(colors), marker=next(markers), label=f'Step-up: {step_up}%')
+                plot_growth(years, yearly_growth, title, color=next(color_cycle), marker=next(marker_cycle), label=f'Step-up: {step_up}%')
     
     if save_as:
         plt.savefig(save_as)
@@ -82,7 +85,7 @@ def plot_multiple_growths(
 def show_summary(
     initial_lump_sum: float = typer.Option(700000, help="Initial lump sum investment in INR"),
     sip_amounts: str = typer.Option("70000,120000,250000", help="Comma-separated list of SIP amounts in INR"),
-    step_ups: str = typer.Option("0,10,15", help="Comma-separated list of annual step-up percentages"),
+    step_ups: str = typer.Option("0,10", help="Comma-separated list of annual step-up percentages"),
     rates_of_return: str = typer.Option("10,14,18", help="Comma-separated list of annual rates of return in percentage"),
     years: int = typer.Option(25, help="Number of years for the investment")
 ):
