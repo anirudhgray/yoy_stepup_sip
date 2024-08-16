@@ -1,7 +1,13 @@
 import matplotlib.pyplot as plt
 import itertools
+import typer
+from rich.console import Console
+from rich.table import Table
 
-def calculate_yearly_growth(initial_lump_sum, monthly_sip, annual_step_up, annual_rate_of_return, years):
+app = typer.Typer()
+console = Console()
+
+def calculate_yearly_growth(initial_lump_sum: float, monthly_sip: float, annual_step_up: float, annual_rate_of_return: float, years: int):
     monthly_rate_of_return = (1 + annual_rate_of_return / 100) ** (1/12) - 1
     yearly_values = []
     total_investment_value = initial_lump_sum
@@ -15,7 +21,7 @@ def calculate_yearly_growth(initial_lump_sum, monthly_sip, annual_step_up, annua
     
     return yearly_values
 
-def plot_growth(years, yearly_growth, title, color='b', marker='o', label=None):
+def plot_growth(years: int, yearly_growth: list[float], title: str, color: str = 'b', marker: str = 'o', label: str = None):
     years_list = list(range(1, years + 1))
     plt.plot(years_list, yearly_growth, marker=marker, linestyle='-', color=color, label=label)
     for i, value in enumerate(yearly_growth):
@@ -26,7 +32,27 @@ def plot_growth(years, yearly_growth, title, color='b', marker='o', label=None):
     plt.grid(True)
     plt.legend()
 
-def plot_multiple_growths(initial_lump_sum, sip_amounts, step_ups, rates_of_return, years, colors=None, markers=None, save_as=None):
+@app.command()
+def plot_multiple_growths(
+    initial_lump_sum: float = typer.Option(700000, help="Initial lump sum investment in INR"),
+    sip_amounts: str = typer.Option("70000,120000,250000", help="Comma-separated list of SIP amounts in INR"),
+    step_ups: str = typer.Option("0,10,15", help="Comma-separated list of annual step-up percentages"),
+    rates_of_return: str = typer.Option("10,14,18", help="Comma-separated list of annual rates of return in percentage"),
+    years: int = typer.Option(25, help="Number of years for the investment"),
+    colors: str = typer.Option(None, help="Comma-separated list of colors for the plots"),
+    markers: str = typer.Option(None, help="Comma-separated list of markers for the plots"),
+    save_as: str = typer.Option(None, help="File name to save the plot")
+):
+    """
+    Plot the growth of investment portfolio over time with different SIP amounts, step-ups, and rates of return.
+    """
+    # Convert comma-separated strings to lists
+    sip_amounts = [float(x) for x in sip_amounts.split(',')]
+    step_ups = [float(x) for x in step_ups.split(',')]
+    rates_of_return = [float(x) for x in rates_of_return.split(',')]
+    colors = colors.split(',') if colors else None
+    markers = markers.split(',') if markers else None
+    
     num_rows = len(sip_amounts)
     num_cols = len(rates_of_return)
     
@@ -52,11 +78,36 @@ def plot_multiple_growths(initial_lump_sum, sip_amounts, step_ups, rates_of_retu
     
     plt.show()
 
-# Given inputs
-initial_lump_sum = 700000
-sip_amounts = [70000, 120000, 250000]
-step_ups = [0, 10, 15]
-rates_of_return = [10, 14, 18]
-years = 25
+@app.command()
+def show_summary(
+    initial_lump_sum: float = typer.Option(700000, help="Initial lump sum investment in INR"),
+    sip_amounts: str = typer.Option("70000,120000,250000", help="Comma-separated list of SIP amounts in INR"),
+    step_ups: str = typer.Option("0,10,15", help="Comma-separated list of annual step-up percentages"),
+    rates_of_return: str = typer.Option("10,14,18", help="Comma-separated list of annual rates of return in percentage"),
+    years: int = typer.Option(25, help="Number of years for the investment")
+):
+    """
+    Show a summary table of investment growth.
+    """
+    # Convert comma-separated strings to lists of floats
+    sip_amounts = [float(x) for x in sip_amounts.split(',')]
+    step_ups = [float(x) for x in step_ups.split(',')]
+    rates_of_return = [float(x) for x in rates_of_return.split(',')]
+    
+    table = Table(title="Investment Growth Summary")
 
-plot_multiple_growths(initial_lump_sum, sip_amounts, step_ups, rates_of_return, years, save_as='portfolio_growth.png')
+    table.add_column("SIP Amount (INR)", justify="right")
+    table.add_column("Step-up (%)", justify="right")
+    table.add_column("Rate of Return (%)", justify="right")
+    table.add_column(f"Value After {years} Years (INR Crore)", justify="right")
+
+    for sip in sip_amounts:
+        for step_up in step_ups:
+            for rate in rates_of_return:
+                yearly_growth = calculate_yearly_growth(initial_lump_sum, sip, step_up, rate, years)
+                table.add_row(str(sip), str(step_up), str(rate), f"{yearly_growth[-1]:.2f}")
+    
+    console.print(table)
+
+if __name__ == "__main__":
+    app()
