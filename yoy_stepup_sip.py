@@ -3,6 +3,7 @@ import itertools
 import typer
 from rich.console import Console
 from rich.table import Table
+import csv
 
 app = typer.Typer()
 console = Console()
@@ -21,7 +22,7 @@ def calculate_yearly_growth(initial_lump_sum: float, monthly_sip: float, annual_
     
     return yearly_values
 
-def plot_growth(years: int, yearly_growth: list[float], title: str, color: str = 'b', marker: str = 'o', label: str = None):
+def plot_growth(years: int, yearly_growth: list[float], title: str, color: str = 'b', marker: str = 'o', label: str = "Step-up: NA"):
     years_list = list(range(1, years + 1))
     plt.plot(years_list, yearly_growth, marker=marker, linestyle='-', color=color, label=label)
     for i, value in enumerate(yearly_growth):
@@ -47,35 +48,37 @@ def plot_multiple_growths(
     Plot the growth of investment portfolio over time with different SIP amounts, step-ups, and rates of return.
     """
     # Convert comma-separated strings to lists
-    sip_amounts = [float(x) for x in sip_amounts.split(',')]
-    step_ups = [float(x) for x in step_ups.split(',')]
-    rates_of_return = [float(x) for x in rates_of_return.split(',')]
-    colors = colors.split(',') if colors else None
-    markers = markers.split(',') if markers else None
+    sip_amounts_list = [float(x) for x in sip_amounts.split(',')]
+    step_ups_list = [float(x) for x in step_ups.split(',')]
+    rates_of_return_list = [float(x) for x in rates_of_return.split(',')]
+    colors_list = colors.split(',') if colors else None
+    markers_list = markers.split(',') if markers else None
     
-    num_rows = len(sip_amounts)
-    num_cols = len(rates_of_return)
+    num_rows = len(sip_amounts_list)
+    num_cols = len(rates_of_return_list)
     
     fig, axs = plt.subplots(num_rows, num_cols, figsize=(15, 10))
     fig.tight_layout(pad=4.0)
+    fig.suptitle(f'Investment Growth Over {years} Years\nInitial Lump Sum: INR {initial_lump_sum}', fontsize=12, fontstyle='italic')
+    plt.subplots_adjust(top=0.9, hspace=0.4, wspace=0.4)
     
-    if not colors:
-        colors = ['c', 'm', 'y', 'k', 'r', 'g', 'b'][:len(step_ups)]
-    if not markers:
-        markers = ['o', 's', 'D', '^', 'v', 'p', 'P'][:len(step_ups)]
+    if not colors_list:
+        colors_list = ['c', 'm', 'y', 'k', 'r', 'g', 'b'][:len(step_ups_list)]
+    if not markers_list:
+        markers_list = ['o', 's', 'D', '^', 'v', 'p', 'P'][:len(step_ups_list)]
     
-    color_cycle = itertools.cycle(colors)
-    marker_cycle = itertools.cycle(markers)
+    color_cycle = itertools.cycle(colors_list)
+    marker_cycle = itertools.cycle(markers_list)
     
-    for i, sip in enumerate(sip_amounts):
-        for j, rate in enumerate(rates_of_return):
+    for i, sip in enumerate(sip_amounts_list):
+        for j, rate in enumerate(rates_of_return_list):
             if num_cols > 1:
                 ax = axs[i, j] if num_rows > 1 else axs[j]
             else:
                 ax = axs[i] if num_rows > 1 else axs
             plt.sca(ax)
             title = f'SIP: {sip}, Rate: {rate}%'
-            for step_up in step_ups:
+            for step_up in step_ups_list:
                 yearly_growth = calculate_yearly_growth(initial_lump_sum, sip, step_up, rate, years)
                 plot_growth(years, yearly_growth, title, color=next(color_cycle), marker=next(marker_cycle), label=f'Step-up: {step_up}%')
     
@@ -90,30 +93,39 @@ def show_summary(
     sip_amounts: str = typer.Option("70000,120000,250000", help="Comma-separated list of SIP amounts in INR"),
     step_ups: str = typer.Option("0,10", help="Comma-separated list of annual step-up percentages"),
     rates_of_return: str = typer.Option("10,14,18", help="Comma-separated list of annual rates of return in percentage"),
-    years: int = typer.Option(25, help="Number of years for the investment")
+    years: int = typer.Option(25, help="Number of years for the investment"),
+    save_as_csv: str = typer.Option(None, help="File name to save the summary as CSV")
 ):
     """
-    Show a summary table of investment growth.
+    Show a summary table of investment growth and optionally save it as a CSV file.
     """
     # Convert comma-separated strings to lists of floats
-    sip_amounts = [float(x) for x in sip_amounts.split(',')]
-    step_ups = [float(x) for x in step_ups.split(',')]
-    rates_of_return = [float(x) for x in rates_of_return.split(',')]
+    sip_amounts_list = [float(x) for x in sip_amounts.split(',')]
+    step_ups_list = [float(x) for x in step_ups.split(',')]
+    rates_of_return_list = [float(x) for x in rates_of_return.split(',')]
     
-    table = Table(title="Investment Growth Summary")
+    table = Table(title=f"Investment Growth Summary Over {years} Years\nInitial Lump Sum: INR {initial_lump_sum}")
 
     table.add_column("SIP Amount (INR)", justify="right")
     table.add_column("Step-up (%)", justify="right")
     table.add_column("Rate of Return (%)", justify="right")
     table.add_column(f"Value After {years} Years (INR Crore)", justify="right")
 
-    for sip in sip_amounts:
-        for step_up in step_ups:
-            for rate in rates_of_return:
+    rows = []
+    for sip in sip_amounts_list:
+        for step_up in step_ups_list:
+            for rate in rates_of_return_list:
                 yearly_growth = calculate_yearly_growth(initial_lump_sum, sip, step_up, rate, years)
+                rows.append([sip, step_up, rate, f"{yearly_growth[-1]:.2f}"])
                 table.add_row(str(sip), str(step_up), str(rate), f"{yearly_growth[-1]:.2f}")
     
     console.print(table)
+
+    if save_as_csv:
+        with open(save_as_csv, mode='w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(["SIP Amount (INR)", "Step-up (%)", "Rate of Return (%)", f"Value After {years} Years (INR Crore)"])
+            writer.writerows(rows)
 
 if __name__ == "__main__":
     app()
