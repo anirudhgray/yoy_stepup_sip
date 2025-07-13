@@ -3,11 +3,24 @@
 This Python script calculates and visualizes the growth of an investment portfolio over time. It supports various features including plotting growth with different SIP amounts, annual step-ups, and rates of return, as well as summarizing the investment growth in a table format.
 
 ## Features
-- [x] Calculate Yearly Growth: Compute the portfolio value over time with specified SIP amounts, step-ups, and rates of return.
-- [x] Plot Growth: Visualize the growth of the investment portfolio using Matplotlib, with options to customize colors, markers, and save the plot.
-- [x] Show Summary: Generate a summary table of the investment growth for different parameters using Rich.
+- [x] **Calculate Yearly Growth**: Compute the portfolio value over time with specified SIP amounts, step-ups, and rates of return.
+- [x] **Plot Growth**: Visualize the growth of the investment portfolio using Matplotlib, with options to customize colors, markers, and save the plot.
+- [x] **Show Summary**: Generate a summary table of the investment growth for different parameters using Rich.
+- [x] **Export to CSV**: Save summary data as a CSV file for further analysis.
+- [x] **Streamlit UI**: A simple Streamlit interface to visualize the investment growth interactively.
 
 ## How to use
+
+### Streamlit Interface
+To run the Streamlit interface, use the following command:
+
+```bash
+streamlit run app.py
+```
+
+![investment growth streamlit ui](image.png)
+
+### Command Line Interface
 ```zsh
 (>_>) python3 yoy_stepup_sip.py --help
                                                                                                                                                                           
@@ -29,19 +42,22 @@ This Python script calculates and visualizes the growth of an investment portfol
                                                                                                                                                                           
  Usage: yoy_stepup_sip.py plot-multiple-growths [OPTIONS]                                                                                                                 
                                                                                                                                                                           
- Plot the growth of investment portfolio over time with different SIP amounts, step-ups, and rates of return.                                                             
-                                                                                                                                                                          
-╭─ Options ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
-│ --initial-lump-sum        FLOAT    Initial lump sum investment in INR [default: 700000]                                                                                │
-│ --sip-amounts             TEXT     Comma-separated list of SIP amounts in INR [default: 70000,120000,250000]                                                           │
-│ --step-ups                TEXT     Comma-separated list of annual step-up percentages [default: 0,10,15]                                                               │
-│ --rates-of-return         TEXT     Comma-separated list of annual rates of return in percentage [default: 10,14,18]                                                    │
-│ --years                   INTEGER  Number of years for the investment [default: 25]                                                                                    │
-│ --colors                  TEXT     Comma-separated list of colors for the plots [default: None]                                                                        │
-│ --markers                 TEXT     Comma-separated list of markers for the plots [default: None]                                                                       │
-│ --save-as                 TEXT     File name to save the plot [default: None]                                                                                          │
-│ --help                             Show this message and exit.                                                                                                         │
-╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+ Plot the growth of investment portfolio over time with different SIP amounts, step-ups, and rates of return.                                       
+                                                                                                                                                    
+╭─ Options ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ --initial-lump-sum                          FLOAT    Initial lump sum investment in INR [default: 700000]                                        │
+│ --sip-amounts                               TEXT     Comma-separated list of SIP amounts in INR [default: 70000,120000,250000]                   │
+│ --step-ups                                  TEXT     Comma-separated list of annual step-up percentages [default: 0,10]                          │
+│ --rates-of-return                           TEXT     Comma-separated list of annual rates of return in percentage [default: 10,14,18]            │
+│ --years                                     INTEGER  Number of years for the investment [default: 25]                                            │
+│ --show-invested       --no-show-invested             Show invested amount in the plot. Might clutter the plot with many lines in case of         │
+│                                                      multiple step-up values.                                                                    │
+│                                                      [default: no-show-invested]                                                                 │
+│ --colors                                    TEXT     Comma-separated list of colors for the plots [default: None]                                │
+│ --markers                                   TEXT     Comma-separated list of markers for the plots [default: None]                               │
+│ --save-as                                   TEXT     File name to save the plot [default: None]                                                  │
+│ --help                                               Show this message and exit.                                                                 │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 ```
 
 ```zsh

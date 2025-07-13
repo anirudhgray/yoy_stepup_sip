@@ -8,30 +8,67 @@ import csv
 app = typer.Typer()
 console = Console()
 
-def calculate_yearly_growth(initial_lump_sum: float, monthly_sip: float, annual_step_up: float, annual_rate_of_return: float, years: int):
+def calculate_yearly_growth(
+    initial_lump_sum: float,
+    monthly_sip: float,
+    annual_step_up: float,
+    annual_rate_of_return: float,
+    years: int
+):
     monthly_rate_of_return = (1 + annual_rate_of_return / 100) ** (1/12) - 1
-    yearly_values = []
-    total_investment_value = initial_lump_sum
+    portfolio_value = initial_lump_sum
+    total_invested = initial_lump_sum
+
+    yearly_data = []
 
     for year in range(1, years + 1):
         current_sip = monthly_sip * ((1 + annual_step_up / 100) ** (year - 1))
-        for month in range(12):
-            total_investment_value += current_sip
-            total_investment_value *= (1 + monthly_rate_of_return)
-        yearly_values.append(total_investment_value / 1e7)
-    
-    return yearly_values
+        for _ in range(12):
+            portfolio_value += current_sip
+            portfolio_value *= (1 + monthly_rate_of_return)
+        total_invested += current_sip * 12
 
-def plot_growth(years: int, yearly_growth: list[float], title: str, color: str = 'b', marker: str = 'o', label: str = "Step-up: NA"):
-    years_list = list(range(1, years + 1))
-    plt.plot(years_list, yearly_growth, marker=marker, linestyle='-', color=color, label=label)
-    for i, value in enumerate(yearly_growth):
-        plt.text(years_list[i], value, f'{value:.2f}', fontsize=8, ha='right')
+        yearly_data.append({
+            "year": year,
+            "invested": round(total_invested),
+            "value": round(portfolio_value),
+            "gain": round(portfolio_value - total_invested),
+            "invested_crore": round(total_invested / 1e7, 2),
+            "value_crore": round(portfolio_value / 1e7, 2)
+        })
+
+    return yearly_data
+
+
+def plot_growth(years: int, yearly_data: list[dict], title: str, color: str = 'b', marker: str = 'o', label: str = "Step-up: NA", show_invested: bool = False):
+    # Determine the interval for displaying data points based on the number of years
+    if years <= 10:
+        interval = 1
+    elif years <= 25:
+        interval = 2
+    else:
+        interval = 3
+
+    # Filter yearly data based on the interval
+    filtered_yearly_data = [d for d in yearly_data if d["year"] % interval == 0 or d["year"] == years]
+
+    years_list = [d["year"] for d in filtered_yearly_data]
+    values = [d["value_crore"] for d in filtered_yearly_data]
+    invested_amounts = [d["invested_crore"] for d in filtered_yearly_data]
+
+    plt.plot(years_list, values, marker=marker, linestyle='-', color=color, label=label)
+    for x, y in zip(years_list, values):
+        plt.text(x, y, f'{y:.2f}', fontsize=8, ha='right')
+    if show_invested:
+        plt.plot(years_list, invested_amounts, marker=marker, linestyle='--', color=color, label='Invested Amount')
+        for x, y in zip(years_list, invested_amounts):
+            plt.text(x, y, f'{y:.2f}', fontsize=8, ha='right')
     plt.title(title)
     plt.xlabel('Years')
     plt.ylabel('Portfolio Value (INR Crore)')
     plt.grid(True)
     plt.legend()
+
 
 @app.command()
 def plot_multiple_growths(
@@ -40,6 +77,7 @@ def plot_multiple_growths(
     step_ups: str = typer.Option("0,10", help="Comma-separated list of annual step-up percentages"),
     rates_of_return: str = typer.Option("10,14,18", help="Comma-separated list of annual rates of return in percentage"),
     years: int = typer.Option(25, help="Number of years for the investment"),
+    show_invested: bool = typer.Option(False, help="Show invested amount in the plot. Might clutter the plot with many lines in case of multiple step-up values."),
     colors: str = typer.Option(None, help="Comma-separated list of colors for the plots"),
     markers: str = typer.Option(None, help="Comma-separated list of markers for the plots"),
     save_as: str = typer.Option(None, help="File name to save the plot")
@@ -80,8 +118,7 @@ def plot_multiple_growths(
             title = f'SIP: {sip}, Rate: {rate}%'
             for step_up in step_ups_list:
                 yearly_growth = calculate_yearly_growth(initial_lump_sum, sip, step_up, rate, years)
-                plot_growth(years, yearly_growth, title, color=next(color_cycle), marker=next(marker_cycle), label=f'Step-up: {step_up}%')
-    
+                plot_growth(years, yearly_growth, title, color=next(color_cycle), marker=next(marker_cycle), label=f'Step-up: {step_up}%', show_invested=show_invested)
     if save_as:
         plt.savefig(save_as)
     
@@ -115,9 +152,10 @@ def show_summary(
     for sip in sip_amounts_list:
         for step_up in step_ups_list:
             for rate in rates_of_return_list:
-                yearly_growth = calculate_yearly_growth(initial_lump_sum, sip, step_up, rate, years)
-                rows.append([sip, step_up, rate, f"{yearly_growth[-1]:.2f}"])
-                table.add_row(str(sip), str(step_up), str(rate), f"{yearly_growth[-1]:.2f}")
+                yearly_data = calculate_yearly_growth(initial_lump_sum, sip, step_up, rate, years)
+                final = yearly_data[-1]
+                rows.append([sip, step_up, rate, f"{final['value_crore']:.2f}"])
+                table.add_row(str(sip), str(step_up), str(rate), f"{final['value_crore']:.2f}")
     
     console.print(table)
 
