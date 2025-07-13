@@ -18,7 +18,7 @@ To run the Streamlit interface, use the following command:
 streamlit run app.py
 ```
 
-![investment growth streamlit ui](image.png)
+![investment growth streamlit ui](docs/streamlit-ui.png)
 
 ### Command Line Interface
 ```zsh
@@ -37,6 +37,7 @@ streamlit run app.py
 ╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 ```
 
+#### Plot Investment Growth(s)
 ```zsh
 (>_>) python3 yoy_stepup_sip.py plot-multiple-growths --help
                                                                                                                                                                           
@@ -60,6 +61,9 @@ streamlit run app.py
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 ```
 
+![cli plot](docs/plot-multiple-growths.png)
+
+#### Show Summary of Investment Growth(s)
 ```zsh
 (>_>) python3 yoy_stepup_sip.py show-summary --help                                                                                           
                                                                                                                                                                        
